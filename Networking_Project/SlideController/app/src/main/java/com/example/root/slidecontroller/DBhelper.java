@@ -42,7 +42,7 @@ public class DBhelper extends SQLiteOpenHelper {
         db.execSQL("insert into ipadresses(name, ip, active) values('Room 334','192.168.2.100',0)");
         db.execSQL("insert into ipadresses(name, ip, active) values('SUST WIFI - NUSRAT','10.100.5.1',0)");
         db.execSQL("insert into ipadresses(name, ip, active) values('EMULATOR','10.0.3.2',1)");
-        db.execSQL("insert into ipadresses(name, ip, active) values('New Phone','192.168.0.120',1)");
+        db.execSQL("insert into ipadresses(name, ip, active) values('New Phone','192.168.0.110',1)");
 
 
 

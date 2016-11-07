@@ -46,9 +46,7 @@ public class ImageViewer extends JFrame {
             // Exiting program on window close 
             addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent e) {
-              
                     frame.dispose();
-                    
                     //System.exit(0);
                 }
             });
@@ -56,7 +54,6 @@ public class ImageViewer extends JFrame {
             // Exitig program on mouse click 
             addMouseListener(new MouseListener() {
                 public void mouseClicked(MouseEvent e) {
-            
                     frame.dispose();
                 }
 

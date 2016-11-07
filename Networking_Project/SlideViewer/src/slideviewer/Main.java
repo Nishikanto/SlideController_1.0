@@ -5,18 +5,17 @@
  */
 package slideviewer;
 
+import java.awt.AWTException;
+import java.awt.Cursor;
+import java.awt.Robot;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,6 +29,9 @@ public class Main extends javax.swing.JFrame {
     private ImageViewer imageViewer;
     private int next = 0;
     private int numOfSlide = 0;
+    public static final int FIVE_SECONDS = 5000;
+    public static final int MAX_Y = 400;
+    public static final int MAX_X = 400;
 
     /**
      * Creates new form NewJFrame
@@ -108,13 +110,33 @@ public class Main extends javax.swing.JFrame {
     }//GEN-LAST:event_openButtonActionPerformed
 
     private void showSlideButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showSlideButtonActionPerformed
-        
+
         try {
             imageViewer.slideShow("/root/NetBeansProjects/SlideViewer/images/ppt_image0.png", 0);
             next = 1;
+
+            Robot robot = new Robot();
+            Random random = new Random();
+            Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
+
+            new Thread() {
+                public void run() {
+                    while (true) {
+                        robot.mouseMove(random.nextInt(MAX_X), random.nextInt(MAX_Y));
+                        try {
+                            Thread.sleep(FIVE_SECONDS);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            }.start();
+
         } catch (MalformedURLException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } catch (AWTException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        } 
     }//GEN-LAST:event_showSlideButtonActionPerformed
 
     /**
@@ -174,7 +196,7 @@ public class Main extends javax.swing.JFrame {
 
                         if ((receiveMessage = receiveRead.readLine()) != null) {
                             System.out.println(receiveMessage);
-                                                                                  
+
                             if (receiveMessage.equals(".next")) {
                                 if (next < numOfSlide) {
                                     next = next + 1;
@@ -186,10 +208,10 @@ public class Main extends javax.swing.JFrame {
                                     next = next - 1;
                                     imageViewer.slideShow("/root/NetBeansProjects/SlideViewer/images/ppt_image" + next + ".png", next);
                                 }
-                            } else if(receiveMessage.equals(".close")){
+                            } else if (receiveMessage.equals(".close")) {
                                 imageViewer.close();
-                            } else if(receiveMessage.equals(".exit")){
-                                
+                            } else if (receiveMessage.equals(".exit")) {
+
                                 imageViewer.exit();
                             }
                         }
