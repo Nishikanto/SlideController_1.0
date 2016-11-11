@@ -33,11 +33,15 @@ public class SlideViewer {
     public int OpenSlide() throws IOException {
         // TODO code application logic here
         //creating an empty presentation
-        File file = new File("/root/NetBeansProjects/SlideViewer/src/slideviewer/Robo.pptx");
-        XMLSlideShow ppt = new XMLSlideShow(new FileInputStream(file));
+        File file = createFile();
+        
+        
+        File slideFile = new File(Utils.path+"/Robo.pptx");
+        
+        XMLSlideShow ppt = new XMLSlideShow(new FileInputStream(slideFile));
         //ppt.setPageSize(new java.awt.Dimension(1024, 768));
 
-        int zoom = 2;
+        int zoom = 1;
         AffineTransform at = new AffineTransform();
         at.setToScale(zoom, zoom);
 
@@ -60,7 +64,7 @@ public class SlideViewer {
 
             //render
             slide.get(i).draw(graphics);
-            out = new FileOutputStream("/root/NetBeansProjects/SlideViewer/images/ppt_image" + i + ".png");
+            out = new FileOutputStream(Utils.path + "/ppt_image" + i + ".png");
             javax.imageio.ImageIO.write(img, "png", out);
             ppt.write(out);
         }
@@ -70,6 +74,21 @@ public class SlideViewer {
         out.close();
 
         return slide.size();
+    }
+
+    private File createFile() {
+        
+        
+        File file = new File(Utils.path);
+        if (!file.exists()) {
+            if (file.mkdir()) {
+                System.out.println("Directory is created!");
+            } else {
+                System.out.println("Failed to create directory!");
+            }
+        }
+
+        return file;
     }
 
 }

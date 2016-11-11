@@ -9,15 +9,20 @@ import java.awt.AWTException;
 import java.awt.Cursor;
 import java.awt.Robot;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Base64;
 
 /**
  *
@@ -32,6 +37,7 @@ public class Main extends javax.swing.JFrame {
     public static final int FIVE_SECONDS = 5000;
     public static final int MAX_Y = 400;
     public static final int MAX_X = 400;
+    private Robot robot;
 
     /**
      * Creates new form NewJFrame
@@ -53,6 +59,8 @@ public class Main extends javax.swing.JFrame {
 
         openButton = new javax.swing.JButton();
         showSlideButton = new javax.swing.JButton();
+        statusText = new javax.swing.JLabel();
+        activeButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -70,28 +78,46 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        statusText.setText("System Is Deactive");
+
+        activeButton.setText("Activate System");
+        activeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                activeButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(133, 133, 133)
-                        .addComponent(showSlideButton))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(151, 151, 151)
-                        .addComponent(openButton)))
-                .addContainerGap(143, Short.MAX_VALUE))
+                .addContainerGap()
+                .addComponent(activeButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(statusText)
+                .addContainerGap(221, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(openButton)
+                .addGap(212, 212, 212))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(showSlideButton)
+                .addGap(192, 192, 192))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(65, 65, 65)
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(activeButton)
+                    .addComponent(statusText))
+                .addGap(36, 36, 36)
                 .addComponent(openButton)
                 .addGap(18, 18, 18)
                 .addComponent(showSlideButton)
-                .addContainerGap(181, Short.MAX_VALUE))
+                .addContainerGap(173, Short.MAX_VALUE))
         );
 
         pack();
@@ -103,23 +129,21 @@ public class Main extends javax.swing.JFrame {
             numOfSlide = slideViewer.OpenSlide();
             showSlideButton.setVisible(true);
             imageViewer = new ImageViewer(numOfSlide);
-            server();
+            sendMessage(encodeImage(Utils.path + "/ppt_image0.png"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_openButtonActionPerformed
 
     private void showSlideButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showSlideButtonActionPerformed
-
         try {
-            imageViewer.slideShow("/root/NetBeansProjects/SlideViewer/images/ppt_image0.png", 0);
+            imageViewer.slideShow(Utils.path + "/ppt_image0.png", 0);
             next = 1;
 
-            Robot robot = new Robot();
-            Random random = new Random();
+            robot = new Robot();
             Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
 
-            new Thread() {
+            /*new Thread() {
                 public void run() {
                     while (true) {
                         robot.mouseMove(random.nextInt(MAX_X), random.nextInt(MAX_Y));
@@ -130,14 +154,47 @@ public class Main extends javax.swing.JFrame {
                         }
                     }
                 }
-            }.start();
-
+            }.start();*/
+            
         } catch (MalformedURLException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         } catch (AWTException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+        }
     }//GEN-LAST:event_showSlideButtonActionPerformed
+
+    private void activeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_activeButtonActionPerformed
+        if (activeButton.getText().equals("Activate System")) {
+            new Thread() {
+                public void run() {
+                    try {
+                        sersock = new ServerSocket(12345);
+                        System.out.println("Server ready for chatting");
+                        statusText.setText("System is active. Wating for mobile device");
+                        activeButton.setEnabled(false);
+                        sock = sersock.accept();
+                        statusText.setText("Mobile device is connected");
+                        activeButton.setText("Deactivate");
+                        activeButton.setEnabled(true);
+                        runReceivingThread();
+                    } catch (IOException ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }.start();
+        } else {
+            try {
+                sendMessage(".exit");
+                sock.close();
+                sersock.close();
+                receivingThread.interrupt();
+                activeButton.setText("Activate System");
+                statusText.setText("System is deactivate");
+            } catch (IOException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_activeButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -176,19 +233,35 @@ public class Main extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton activeButton;
     private javax.swing.JButton openButton;
     private javax.swing.JButton showSlideButton;
+    private javax.swing.JLabel statusText;
     // End of variables declaration//GEN-END:variables
 
-    private void server() {
+    private ServerSocket sersock;
+    private Socket sock;
+    private Thread receivingThread;
+    private OutputStream ostream;
+    private PrintWriter pwrite;
 
-        new Thread() {
+    private void sendMessage(String line) {
+        try {
+            ostream = sock.getOutputStream();
+            pwrite = new PrintWriter(ostream, true);
+            pwrite.println(line);       // sending to client
+            pwrite.flush();
+            System.out.println("message sent");
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void runReceivingThread() {
+        receivingThread = new Thread() {
+            private String[] command;
             public void run() {
                 try {
-                    ServerSocket sersock = new ServerSocket(12345);
-                    System.out.println("Server  ready for chatting");
-                    Socket sock = sersock.accept();
-
                     // receiving from server ( receiveRead  object)
                     InputStream istream = sock.getInputStream();
                     BufferedReader receiveRead = new BufferedReader(new InputStreamReader(istream));
@@ -197,19 +270,38 @@ public class Main extends javax.swing.JFrame {
                         if ((receiveMessage = receiveRead.readLine()) != null) {
                             System.out.println(receiveMessage);
 
+                            if (receiveMessage.contains(".move")) {
+                                command = new String[3];
+                                String[] arr = receiveMessage.split(" ");
+                                int i = 0;
+                                for (String ss : arr) {
+                                    command[i++] = ss;
+                                }
+                                System.out.println("X = " + command[1]);
+                                System.out.println("Y = " + command[2]);
+                                
+                                robot.mouseMove(Integer.valueOf(command[1]), Integer.valueOf(command[2]));
+                                
+                                
+                            }
+
                             if (receiveMessage.equals(".next")) {
                                 if (next < numOfSlide) {
                                     next = next + 1;
-                                    imageViewer.slideShow("/root/NetBeansProjects/SlideViewer/images/ppt_image" + next + ".png", next);
+                                    sendMessage(encodeImage(Utils.path + "/ppt_image" + next + ".png"));
+                                    imageViewer.slideShow(Utils.path + "/ppt_image" + next + ".png", next);
                                 }
 
                             } else if (receiveMessage.equals(".previous")) {
                                 if (next >= 0) {
                                     next = next - 1;
-                                    imageViewer.slideShow("/root/NetBeansProjects/SlideViewer/images/ppt_image" + next + ".png", next);
+                                    sendMessage(encodeImage(Utils.path + "/ppt_image" + next + ".png"));
+                                    imageViewer.slideShow(Utils.path + "/ppt_image" + next + ".png", next);
+
                                 }
                             } else if (receiveMessage.equals(".close")) {
                                 imageViewer.close();
+                                this.interrupt();
                             } else if (receiveMessage.equals(".exit")) {
 
                                 imageViewer.exit();
@@ -220,6 +312,13 @@ public class Main extends javax.swing.JFrame {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        }.start();
+        };
+        receivingThread.start();
     }
+
+    public String encodeImage(String source) {
+        ImageUtils imageUtils = new ImageUtils();
+        return imageUtils.encodeImage(source) + "%%%";
+    }
+
 }

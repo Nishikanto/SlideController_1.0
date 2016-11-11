@@ -21,6 +21,8 @@ public class SlideControllerClient {
     private PrintWriter pwrite;
 
 
+
+
     public boolean connect(Context context, String serverName, int serverPort) {
         System.out.println("Establishing connection. Please wait ...");
         DBhelper dBhelper = new DBhelper(context);
@@ -28,9 +30,8 @@ public class SlideControllerClient {
         Log.d("simul", ip);
         if(!ip.equals("0")){
             try {
-
-                Socket sock = new Socket(ip, 12345);
-                ostream = sock.getOutputStream();
+                socket = new Socket(ip, 12345);
+                ostream = socket.getOutputStream();
                 pwrite = new PrintWriter(ostream, true);
                 flag = true;
                 return flag;
@@ -77,5 +78,10 @@ public class SlideControllerClient {
         } catch (IOException ioe) {
             System.out.println("Error closing ...");
         }
+    }
+
+
+    public Socket getSocket(){
+        return socket;
     }
 }
